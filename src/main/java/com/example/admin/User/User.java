@@ -1,9 +1,10 @@
-package com.example.accessingdatamysql;
+package com.example.admin.User;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotNull;
 
 @Entity // This tells Hibernate to make a table out of this class
 public class User {
@@ -11,8 +12,10 @@ public class User {
   @GeneratedValue(strategy=GenerationType.AUTO)
   private Integer id;
 
+  @NotNull
   private String name;
 
+  @NotNull
   private String email;
 
   public Integer getId() {
