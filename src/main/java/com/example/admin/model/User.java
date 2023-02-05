@@ -5,6 +5,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity // This tells Hibernate to make a table out of this class
 public class User {
@@ -17,6 +20,12 @@ public class User {
 
   @NotNull
   private String email;
+
+  @CreationTimestamp
+  private LocalDateTime createTime;
+
+  @CreationTimestamp
+  private LocalDateTime updateTime;
 
   public Integer getId() {
     return id;

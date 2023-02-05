@@ -5,17 +5,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("storage")
 public class StorageProperties {
 
-    /**
-     * Folder location for storing files
-     */
-    private String location = "uploads";
+    private final long fileSize = 1073741824;
 
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
+    public long getFileSize() {
+        return this.fileSize;
     }
 
 }

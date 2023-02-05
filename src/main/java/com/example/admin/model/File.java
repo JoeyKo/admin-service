@@ -2,6 +2,9 @@ package com.example.admin.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 public class File {
@@ -10,10 +13,17 @@ public class File {
     private Integer id;
 
     @NotNull
-    private String name;
+    private String bucketName;
 
     @NotNull
-    private String path;
+    private String name;
+
+    @CreationTimestamp
+    private LocalDateTime createTime;
+
+    @CreationTimestamp
+    private LocalDateTime updateTime;
+
 
     public File() {
     }
@@ -26,20 +36,20 @@ public class File {
         this.id = id;
     }
 
+    public String getBucketName() {
+        return bucketName;
+    }
+
+    public void setBucketName(String bucketName) {
+        this.bucketName = bucketName;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
     }
 
 }

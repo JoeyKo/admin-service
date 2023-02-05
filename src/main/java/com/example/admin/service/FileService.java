@@ -1,91 +1,110 @@
 package com.example.admin.service;
 
 import com.example.admin.repository.FileRepository;
-import com.example.admin.repository.UserRepository;
-import com.example.admin.storage.StorageException;
-import com.example.admin.storage.StorageFileNotFoundException;
 import com.example.admin.storage.StorageProperties;
 import com.example.admin.storage.StorageService;
+import io.minio.BucketExistsArgs;
+import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.errors.MinioException;
+import io.minio.http.Method;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.xml.crypto.Data;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Objects;
-import java.util.stream.Stream;
+import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class FileService implements StorageService {
 
-    private final Path rootLocation;
-
     @Autowired
     private FileRepository repository;
 
+    private final MinioClient minioClient;
+    private final long minioFileSize;
+
     @Autowired
     public FileService(StorageProperties properties) {
-        this.rootLocation = Paths.get(properties.getLocation());
+        minioFileSize = properties.getFileSize();
+        minioClient =
+                MinioClient.builder()
+                        .endpoint("http://127.0.0.1:9000")
+                        .credentials("LegZkIjGKmVJ1c07", "xoDMe9hY0wA3ybPAVqL1JxTMJI8AtqmY")
+                        .build();
     }
 
-    @Override
-    public void store(MultipartFile file) {
+    public boolean bucketExists(String bucketName) {
         try {
-            if (file.isEmpty()) {
-                throw new StorageException("Failed to store empty file " + file.getOriginalFilename());
+            boolean found =
+                    minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+            if (!found) {
+                System.out.println(bucketName + " 不存在");
             }
-
-            Files.copy(file.getInputStream(), this.rootLocation.resolve(Objects.requireNonNull(file.getOriginalFilename())));
-        } catch (IOException e) {
-            throw new StorageException("Failed to store file " + file.getOriginalFilename(), e);
+            return found;
+        } catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
+            System.out.println("Error occurred: " + e);
         }
+        return false;
+    }
+
+    public String getUrl(String bucketName, String objectName) {
+       try {
+           boolean flag = bucketExists(bucketName);
+           String url = "";
+           if (flag) {
+               url = minioClient.getPresignedObjectUrl(
+                       GetPresignedObjectUrlArgs.builder()
+                               .method(Method.GET)
+                               .bucket(bucketName)
+                               .object(objectName)
+                               .expiry(2, TimeUnit.MINUTES)
+                               .build());
+           }
+           return url;
+       } catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
+           System.out.println("Error occurred: " + e);
+       }
+
+        return "";
     }
 
     @Override
-    public Stream<Path> loadAll() {
+    public String upload(MultipartFile file) {
         try {
-            return Files.walk(this.rootLocation, 1)
-                    .filter(path -> !path.equals(this.rootLocation))
-                    .map(path -> this.rootLocation.relativize(path));
-        } catch (IOException e) {
-            throw new StorageException("Failed to read stored files", e);
-        }
+            boolean found = bucketExists("admin");
+            if (found) {
+                InputStream inputStream = new ByteArrayInputStream(file.getBytes());
 
-    }
+                LocalDateTime localDateTime = LocalDateTime.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                String formattedDate = localDateTime.format(formatter);
 
-    @Override
-    public Path load(String filename) {
-        return rootLocation.resolve(filename);
-    }
-
-    @Override
-    public Resource loadAsResource(String filename) {
-        try {
-            Path file = load(filename);
-            Resource resource = new UrlResource(file.toUri());
-            if(resource.exists() || resource.isReadable()) {
-                return resource;
+                minioClient.putObject(PutObjectArgs.builder()
+                        .bucket("admin")
+                        .object(formattedDate + "/" + UUID.randomUUID() + "/" + file.getOriginalFilename())
+                        .stream(inputStream,-1, minioFileSize)
+                        .contentType(file.getContentType())
+                        .build()
+                );
+                return getUrl("admin", file.getOriginalFilename());
             }
-            else {
-                throw new StorageFileNotFoundException("Could not read file: " + filename);
-
-            }
-        } catch (MalformedURLException e) {
-            throw new StorageFileNotFoundException("Could not read file: " + filename, e);
+        } catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
+            System.out.println("Error occurred: " + e);
         }
+
+        return "";
     }
 
-    @Override
-    public void init() {
-        try {
-            Files.createDirectories(rootLocation);
-        } catch (IOException e) {
-            throw new StorageException("Could not initialize storage", e);
-        }
-    }
 }
