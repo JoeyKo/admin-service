@@ -1,5 +1,6 @@
 package com.example.admin.service;
 
+import com.example.admin.model.UserDTO;
 import com.example.admin.repository.UserRepository;
 import com.example.admin.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +16,11 @@ public class UserService {
     @Autowired
     private UserRepository repository;
 
-    public Page<User> getAllUsers(Integer pageNo, Integer pageSize) {
+    public Page<UserDTO> getAllUsers(Integer pageNo, Integer pageSize) {
         Pageable paging = PageRequest.of(pageNo - 1, pageSize);
+        Page<User> users = repository.findAll(paging);
 
-        return repository.findAll(paging);
+        return users.map(UserDTO::new);
     }
 
     public User createUser(User user) {
