@@ -1,19 +1,22 @@
 package com.example.admin.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDTO {
-    private String userName;
+    private String username;
 
     private String email;
 
+    private ERole role;
+
+
     public UserDTO(User user) {
-        this.userName = user.getUserName();
+        this.username = user.getUsername();
         this.email = user.getEmail();
+        this.role = user.getRole().getName();
     }
 }

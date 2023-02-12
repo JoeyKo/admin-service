@@ -13,8 +13,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 @EnableConfigurationProperties(StorageProperties.class)
 public class MyApplication {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
-
   public static void main(String[] args) {
     // 返回IOC容器
     ConfigurableApplicationContext run = SpringApplication.run(MyApplication.class, args);

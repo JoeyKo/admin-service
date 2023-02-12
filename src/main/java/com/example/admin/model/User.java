@@ -1,27 +1,49 @@
 package com.example.admin.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
+import lombok.*;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
-@Entity // This tells Hibernate to make a table out of this class
-public class User {
+@Getter
+@Setter
+@ToString
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+public class User implements UserDetails {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @NotNull
   @Column(unique = true)
-  private String userName;
+  private String username;
 
   @NotNull
   private String password;
 
   @Null
+  @Email
   private String email;
+
+  @ManyToOne
+  @JoinColumn(nullable = false)
+  private Role role;
 
   @CreationTimestamp
   private LocalDateTime createTime;
@@ -29,35 +51,44 @@ public class User {
   @CreationTimestamp
   private LocalDateTime updateTime;
 
-  public Long getId() {
-    return id;
+  @Override
+  public Collection<? extends GrantedAuthority> getAuthorities() {
+    GrantedAuthority authority = new SimpleGrantedAuthority(role.getName().name());
+    List<GrantedAuthority> authorities = new ArrayList<>();
+    authorities.add(authority);
+    return authorities;
   }
 
-  public void setId(Long id) {
-    this.id = id;
+  @Override
+  public boolean isAccountNonExpired() {
+    return true;
   }
 
-  public String getUserName() {
-    return userName;
+  @Override
+  public boolean isAccountNonLocked() {
+    return true;
   }
 
-  public void setUserName(String userName) {
-    this.userName = userName;
+  @Override
+  public boolean isCredentialsNonExpired() {
+    return true;
   }
 
-  public String getPassword() {
-    return password;
+  @Override
+  public boolean isEnabled() {
+    return true;
   }
 
-  public void setPassword(String password) {
-    this.password = password;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+    User user = (User) o;
+    return id != null && Objects.equals(id, user.id);
   }
 
-  public String getEmail() {
-    return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
+  @Override
+  public int hashCode() {
+    return getClass().hashCode();
   }
 }
