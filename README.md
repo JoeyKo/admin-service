@@ -1,3 +1,9 @@
-## Antd后台管理系统后端API服务
+## Spring Boot Web Service
 
-管理端：[vite-react-admin](https://github.com/JoeyKo/vite-react-admin)
+后端RESTful API服务应用
+
+- Spring Boot v3
+- Spring Security
+- Spring WebSocket
+- MYSQL
+- MinIO
