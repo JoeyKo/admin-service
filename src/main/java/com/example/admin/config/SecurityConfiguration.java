@@ -51,6 +51,7 @@ public class SecurityConfiguration {
         http.cors().and().csrf().disable().authorizeHttpRequests(authConfig -> {
                     authConfig.requestMatchers("/api/user/login").permitAll();
                     authConfig.requestMatchers("/api/user/register").permitAll();
+                    authConfig.requestMatchers("/websocket").permitAll();
                     authConfig.anyRequest().authenticated();
                 }).exceptionHandling()
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)

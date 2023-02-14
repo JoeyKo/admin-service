@@ -1,9 +1,6 @@
 package com.example.admin;
 
-import com.example.admin.controller.UserController;
 import com.example.admin.storage.StorageProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
